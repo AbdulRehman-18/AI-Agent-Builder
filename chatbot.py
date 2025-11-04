@@ -1,14 +1,15 @@
 
 """
-CLI chatbot with persistent conversation history and sentiment analysis.
+CLI chatbot with persistent conversation history, sentiment analysis, and intent classification.
 
 Features:
 - Stores conversation history (last 10 messages in memory)
 - Saves history to a JSON file for persistence
 - Loads previous conversations on startup
 - Detects sentiment (positive, negative, neutral)
+- Classifies intent (question, greeting, command, statement)
 - Shows sentiment emoji in history
-- Responds empathetically based on mood
+- Responds contextually based on mood and intent
 - Allows you to view the chat history
 - Supports basic keyword-based responses
 
@@ -78,6 +79,44 @@ def analyze_sentiment(message: str) -> str:
 def get_sentiment_emoji(sentiment: str) -> str:
     """Return emoji for sentiment."""
     return {"positive": "😊", "negative": "😞", "neutral": "😐"}.get(sentiment, "😐")
+
+
+# ============================================================================
+# Intent Classification
+# ============================================================================
+
+QUESTION_WORDS = {"what", "when", "where", "why", "how", "who", "which", "can", "could", "would", "do", "did", "does"}
+GREETING_WORDS = {"hello", "hi", "hey", "greetings", "welcome", "sup", "yo", "howdy"}
+COMMAND_WORDS = {"history", "clear", "help", "exit", "quit", "bye"}
+
+
+def classify_intent(message: str) -> str:
+    """
+    Classify the intent of a message.
+    Returns: 'question', 'greeting', 'command', or 'statement'
+    """
+    msg_lower = message.lower()
+    words = set(msg_lower.split())
+    
+    # Check for commands first
+    if any(word in COMMAND_WORDS for word in words):
+        return "command"
+    
+    # Check for greetings
+    if any(word in GREETING_WORDS for word in words):
+        return "greeting"
+    
+    # Check for questions (question words or ends with ?)
+    if any(word in QUESTION_WORDS for word in words) or msg_lower.endswith("?"):
+        return "question"
+    
+    # Default to statement
+    return "statement"
+
+
+def get_intent_emoji(intent: str) -> str:
+    """Return emoji for intent."""
+    return {"question": "❓", "greeting": "👋", "command": "⚙️", "statement": "💬"}.get(intent, "💬")
 
 
 RESPONSES = {
@@ -152,8 +191,8 @@ class ConversationHistory:
         self.save_to_file()
 
 
-def get_response(message: str, sentiment: str) -> str:
-    """Return a response based on keyword matching and sentiment."""
+def get_response(message: str, sentiment: str, intent: str) -> str:
+    """Return a response based on keyword matching, sentiment, and intent."""
     if not message.strip():
         return "Say something so I can respond!"
 
@@ -164,31 +203,60 @@ def get_response(message: str, sentiment: str) -> str:
         if keyword in msg:
             return response
     
-    # Sentiment-aware responses
-    if sentiment == "positive":
-        pos_responses = [
-            "That's wonderful to hear!",
-            "I'm glad you're excited!",
-            "That sounds amazing!",
-            "That's great! Tell me more.",
+    # Intent-aware responses
+    if intent == "question":
+        question_responses = [
+            "That's a great question! Let me think...",
+            "Good question! I'm not sure I have a perfect answer, but here's what I think...",
+            "I'm glad you asked that.",
+            "That's something to consider.",
         ]
-        return random.choice(pos_responses)
+        return random.choice(question_responses)
     
-    if sentiment == "negative":
-        neg_responses = [
-            "I'm sorry to hear that. That sounds frustrating.",
-            "I understand. That must be difficult.",
-            "I feel for you. Is there anything I can help with?",
-            "That's tough. I'm here to listen.",
+    if intent == "greeting":
+        greeting_responses = [
+            "Hello! Great to see you!",
+            "Hi there! How are you doing?",
+            "Hey! What's on your mind?",
+            "Greetings! What can I help with?",
         ]
-        return random.choice(neg_responses)
+        return random.choice(greeting_responses)
     
-    # Fallback for neutral
+    if intent == "statement":
+        # Combine sentiment + statement
+        if sentiment == "positive":
+            pos_responses = [
+                "That's wonderful to hear!",
+                "I'm glad you're excited!",
+                "That sounds amazing!",
+                "That's great! Tell me more.",
+            ]
+            return random.choice(pos_responses)
+        
+        if sentiment == "negative":
+            neg_responses = [
+                "I'm sorry to hear that. That sounds frustrating.",
+                "I understand. That must be difficult.",
+                "I feel for you. Is there anything I can help with?",
+                "That's tough. I'm here to listen.",
+            ]
+            return random.choice(neg_responses)
+        
+        # Neutral statement
+        statement_responses = [
+            "That's interesting! Tell me more.",
+            "I see. Can you elaborate?",
+            "That makes sense.",
+            "Interesting perspective.",
+        ]
+        return random.choice(statement_responses)
+    
+    # Fallback for any other intent
     return random.choice(FALLBACKS)
 
 
 def main() -> None:
-    print("Chatbot with Sentiment Analysis — type 'history' to see your chat, 'clear' to reset, or 'exit' to leave\n")
+    print("Chatbot with Sentiment & Intent Analysis — type 'history' to see your chat, 'clear' to reset, or 'exit' to leave\n")
     
     history = ConversationHistory()
     
@@ -218,15 +286,15 @@ def main() -> None:
                 print("Bot: Conversation history cleared!\n")
                 continue
             
-            # Analyze sentiment
+            # Analyze sentiment and classify intent
             sentiment = analyze_sentiment(user_input)
-            emoji = get_sentiment_emoji(sentiment)
+            intent = classify_intent(user_input)
             
             # Record user message with sentiment
             history.add("user", user_input, sentiment)
             
             # Generate and display response
-            response = get_response(user_input, sentiment)
+            response = get_response(user_input, sentiment, intent)
             history.add("bot", response, "neutral")
             print(f"Bot: {response}\n")
     

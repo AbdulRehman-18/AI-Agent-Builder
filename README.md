@@ -1,4 +1,4 @@
-# Ai Agent Builder
+﻿# Ai Agent Builder
 
 #Abdul Rehman 🔥
 
@@ -14,17 +14,17 @@ A command-line chatbot with **persistent conversation history** and **sentiment 
 
 ### Current Features
 
-**Feature 1: Conversation History** ✅
+**Feature 1: Conversation History** 
 - Stores the last 10 messages in memory during the session.
 - Type `history` to view the full conversation.
 
-**Feature 2: Persistent File Storage** ✅
+**Feature 2: Persistent File Storage** 
 - Saves all messages to `chat_history.json` automatically.
 - Loads previous conversations when you start the chatbot.
 - History persists across sessions!
 - Type `clear` to start a fresh conversation.
 
-**Feature 3: Sentiment Analysis** ✅ NEW!
+**Feature 3: Sentiment Analysis**  NEW!
 - Automatically detects sentiment: **positive** 😊, **negative** 😞, or **neutral** 😐
 - Shows sentiment emoji next to each message in history
 - Responds empathetically based on your mood
@@ -38,9 +38,6 @@ Run it with Python (PowerShell on Windows):
 ```powershell
 python chatbot.py
 ```
-
-
-
 
 ### How History is Persisted
 
