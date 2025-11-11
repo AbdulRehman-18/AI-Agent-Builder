@@ -1,6 +1,6 @@
 
 """
-CLI chatbot with persistent conversation history, sentiment analysis, and intent classification.
+CLI chatbot with persistent conversation history, sentiment analysis, intent classification, and typing effect.
 
 Features:
 - Stores conversation history (last 10 messages in memory)
@@ -9,6 +9,7 @@ Features:
 - Detects sentiment (positive, negative, neutral)
 - Classifies intent (question, greeting, command, statement)
 - Shows sentiment emoji in history
+- Simulates human-like typing animation
 - Responds contextually based on mood and intent
 - Allows you to view the chat history
 - Supports basic keyword-based responses
@@ -21,6 +22,7 @@ Type 'clear' to start a fresh conversation.
 import sys
 import json
 import random
+import time
 from typing import List, Tuple
 from pathlib import Path
 
@@ -117,6 +119,24 @@ def classify_intent(message: str) -> str:
 def get_intent_emoji(intent: str) -> str:
     """Return emoji for intent."""
     return {"question": "❓", "greeting": "👋", "command": "⚙️", "statement": "💬"}.get(intent, "💬")
+
+
+# ============================================================================
+# Typing Effect
+# ============================================================================
+
+def typing_effect(text: str, speed: float = 0.03) -> None:
+    """
+    Display text with a typing animation effect.
+    
+    Args:
+        text: The text to display
+        speed: Delay between characters in seconds (default: 0.03)
+    """
+    for char in text:
+        print(char, end='', flush=True)
+        time.sleep(speed)
+    print()  # New line at the end
 
 
 RESPONSES = {
@@ -265,12 +285,16 @@ def main() -> None:
             user_input = input("You: ").strip()
             
             if not user_input:
-                print("Bot: Say something — I'm listening.\n")
+                print("Bot: ", end='')
+                typing_effect("Say something — I'm listening.")
+                print()
                 continue
             
             # Check for exit
             if user_input.lower() in EXIT_KEYWORDS:
-                print("Bot: Goodbye! (History saved to chat_history.json)\n")
+                print("Bot: ", end='')
+                typing_effect("Goodbye! (History saved to chat_history.json)")
+                print()
                 break
             
             # Check for history command
@@ -283,7 +307,9 @@ def main() -> None:
             # Check for clear command
             if user_input.lower() == "clear":
                 history.clear()
-                print("Bot: Conversation history cleared!\n")
+                print("Bot: ", end='')
+                typing_effect("Conversation history cleared!")
+                print()
                 continue
             
             # Analyze sentiment and classify intent
@@ -293,13 +319,17 @@ def main() -> None:
             # Record user message with sentiment
             history.add("user", user_input, sentiment)
             
-            # Generate and display response
+            # Generate and display response with typing effect
             response = get_response(user_input, sentiment, intent)
             history.add("bot", response, "neutral")
-            print(f"Bot: {response}\n")
+            print("Bot: ", end='')
+            typing_effect(response)
+            print()
     
     except (KeyboardInterrupt, EOFError):
-        print("\nBot: Goodbye! (History saved to chat_history.json)\n")
+        print("\nBot: ", end='')
+        typing_effect("Goodbye! (History saved to chat_history.json)")
+        print()
         sys.exit(0)
 
 
